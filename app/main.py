@@ -1,9 +1,10 @@
 import string
 import random
 from fastapi import FastAPI, Depends, HTTPException, Request
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, FileResponse
 from pydantic import BaseModel, HttpUrl
 from sqlalchemy.orm import Session
+from typing import Annotated
 
 from app.database import engine, get_db, Base
 from app.models import URL
@@ -60,8 +61,14 @@ def health_check():
     return {"status": "ok"}
 
 
-@app.post("/shorten", response_model=ShortenResponse, status_code=201)
-def shorten_url(payload: ShortenRequest, request: Request, db: Session = Depends(get_db)):
+@app.get("/", response_class=FileResponse)
+def read_root():
+    """Serve the frontend UI."""
+    return FileResponse("app/static/index.html")
+
+
+@app.post("/shorten", response_model=ShortenResponse, status_code=201, responses={500: {"description": "Could not generate a unique short code"}})
+def shorten_url(payload: ShortenRequest, request: Request, db: Annotated[Session, Depends(get_db)]):
     """Shorten a URL — generates a unique short code and stores it."""
 
     # Generate a unique short code (retry on collision)
@@ -85,8 +92,8 @@ def shorten_url(payload: ShortenRequest, request: Request, db: Session = Depends
     )
 
 
-@app.get("/stats/{short_code}", response_model=StatsResponse)
-def get_stats(short_code: str, db: Session = Depends(get_db)):
+@app.get("/stats/{short_code}", response_model=StatsResponse, responses={404: {"description": "Short URL not found"}})
+def get_stats(short_code: str, db: Annotated[Session, Depends(get_db)]):
     """Return click statistics for a given short code."""
 
     url_entry = db.query(URL).filter(URL.short_code == short_code).first()
@@ -101,8 +108,8 @@ def get_stats(short_code: str, db: Session = Depends(get_db)):
     )
 
 
-@app.get("/{short_code}")
-def redirect_to_url(short_code: str, db: Session = Depends(get_db)):
+@app.get("/{short_code}", responses={404: {"description": "Short URL not found"}})
+def redirect_to_url(short_code: str, db: Annotated[Session, Depends(get_db)]):
     """Redirect to the original URL and increment the click counter."""
 
     url_entry = db.query(URL).filter(URL.short_code == short_code).first()
