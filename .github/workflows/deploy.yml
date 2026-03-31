@@ -14,10 +14,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: "3.12"
           cache: "pip"
@@ -36,10 +36,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -47,7 +47,7 @@ jobs:
 
       - name: Login to Amazon ECR
         id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v1
+        uses: aws-actions/amazon-ecr-login@v2
 
       - name: Build, tag, and push image to Amazon ECR
         env:
@@ -62,54 +62,32 @@ jobs:
     needs: build-and-push
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v3
-
       - name: Deploy to EC2 via SSH
-        uses: appleboy/ssh-action@v0.1.10
+        uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ec2-user
           key: ${{ secrets.EC2_SSH_KEY }}
+          envs: ECR_REGISTRY
           script: |
             # Login to ECR
-            aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.ECR_REGISTRY }}
-            
+            aws ecr get-login-password --region ap-southeast-1 | docker login --username AWS --password-stdin $ECR_REGISTRY
+
             # Setup working directory
             mkdir -p ~/url-shortener
-            
-            # Pull new image and restart services
             cd ~/url-shortener
-            
-            # Create/Update docker-compose.prod.yml on server
-            cat << 'EOF' > docker-compose.prod.yml
-            ${{ env.DOCKER_COMPOSE_PROD_CONTENT }}
-            EOF
-            
-            # Export env vars needed for docker-compose
-            export POSTGRES_USER=postgres
-            export POSTGRES_PASSWORD=url_shortener_secret_db_password
-            export POSTGRES_DB=url_shortener
-            export ECR_REGISTRY=${{ secrets.ECR_REGISTRY }}
-            
-            # Pull latest image
-            docker-compose -f docker-compose.prod.yml pull
-            
-            # Up containers in detached mode
-            docker-compose -f docker-compose.prod.yml up -d
-        env:
-          DOCKER_COMPOSE_PROD_CONTENT: |
-            version: "3.9"
-            
+
+            # Create docker-compose.prod.yml on server
+            cat > docker-compose.prod.yml << 'COMPOSE_EOF'
             services:
               db:
                 image: postgres:16
                 container_name: url_shortener_db
                 restart: always
                 environment:
-                  POSTGRES_USER: $${POSTGRES_USER:-postgres}
-                  POSTGRES_PASSWORD: $${POSTGRES_PASSWORD}
-                  POSTGRES_DB: $${POSTGRES_DB:-url_shortener}
+                  POSTGRES_USER: postgres
+                  POSTGRES_PASSWORD: url_shortener_secret_db_password
+                  POSTGRES_DB: url_shortener
                 volumes:
                   - postgres_data:/var/lib/postgresql/data
                 healthcheck:
@@ -117,18 +95,28 @@ jobs:
                   interval: 5s
                   timeout: 5s
                   retries: 5
-            
+
               app:
-                image: $${ECR_REGISTRY}/url-shortener:latest
+                image: ${ECR_REGISTRY}/url-shortener:latest
                 container_name: url_shortener_app
                 restart: always
                 ports:
                   - "80:8000"
                 environment:
-                  DATABASE_URL: postgresql://$${POSTGRES_USER:-postgres}:$${POSTGRES_PASSWORD}@db:5432/$${POSTGRES_DB:-url_shortener}
+                  DATABASE_URL: postgresql://postgres:url_shortener_secret_db_password@db:5432/url_shortener
                 depends_on:
                   db:
                     condition: service_healthy
-            
+
             volumes:
               postgres_data:
+            COMPOSE_EOF
+
+            # Export ECR_REGISTRY for docker compose variable substitution
+            export ECR_REGISTRY=$ECR_REGISTRY
+
+            # Pull latest image and start
+            docker compose -f docker-compose.prod.yml pull
+            docker compose -f docker-compose.prod.yml up -d
+        env:
+          ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
