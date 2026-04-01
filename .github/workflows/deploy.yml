@@ -81,38 +81,38 @@ jobs:
 
             # Write docker-compose file with ECR_REGISTRY substituted
             cat > docker-compose.prod.yml << COMPOSE_EOF
-            services:
-              db:
-                image: postgres:16
-                container_name: url_shortener_db
-                restart: always
-                environment:
-                  POSTGRES_USER: postgres
-                  POSTGRES_PASSWORD: url_shortener_secret_db_password
-                  POSTGRES_DB: url_shortener
-                volumes:
-                  - postgres_data:/var/lib/postgresql/data
-                healthcheck:
-                  test: ["CMD-SHELL", "pg_isready -U postgres"]
-                  interval: 5s
-                  timeout: 5s
-                  retries: 5
+services:
+  db:
+    image: postgres:16
+    container_name: url_shortener_db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: url_shortener_secret_db_password
+      POSTGRES_DB: url_shortener
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
-              app:
-                image: $ECR_REGISTRY/url-shortener:latest
-                container_name: url_shortener_app
-                restart: always
-                ports:
-                  - "80:8000"
-                environment:
-                  DATABASE_URL: postgresql://postgres:url_shortener_secret_db_password@db:5432/url_shortener
-                depends_on:
-                  db:
-                    condition: service_healthy
+  app:
+    image: $ECR_REGISTRY/url-shortener:latest
+    container_name: url_shortener_app
+    restart: always
+    ports:
+      - "80:8000"
+    environment:
+      DATABASE_URL: postgresql://postgres:url_shortener_secret_db_password@db:5432/url_shortener
+    depends_on:
+      db:
+        condition: service_healthy
 
-            volumes:
-              postgres_data:
-            COMPOSE_EOF
+volumes:
+  postgres_data:
+COMPOSE_EOF
 
             # Pull latest image and start
             docker-compose -f docker-compose.prod.yml pull
