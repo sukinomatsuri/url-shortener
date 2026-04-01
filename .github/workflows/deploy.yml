@@ -36,6 +36,8 @@ jobs:
     name: Build & Push to Amazon ECR
     needs: test
     runs-on: ubuntu-latest
+    outputs:
+      registry: ${{ steps.login-ecr.outputs.registry }}
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -67,7 +69,7 @@ jobs:
       - name: Deploy to EC2 via SSH
         uses: appleboy/ssh-action@v1
         env:
-          ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
+          ECR_REGISTRY: ${{ needs.build-and-push.outputs.registry }}
           COMPOSE_FILE: |
             services:
               db:
