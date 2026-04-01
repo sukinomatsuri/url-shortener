@@ -79,8 +79,8 @@ jobs:
             mkdir -p ~/url-shortener
             cd ~/url-shortener
 
-            # Create docker-compose.prod.yml on server
-            cat > docker-compose.prod.yml << 'COMPOSE_EOF'
+            # Write docker-compose file with ECR_REGISTRY substituted
+            cat > docker-compose.prod.yml << COMPOSE_EOF
             services:
               db:
                 image: postgres:16
@@ -99,7 +99,7 @@ jobs:
                   retries: 5
 
               app:
-                image: ${ECR_REGISTRY}/url-shortener:latest
+                image: $ECR_REGISTRY/url-shortener:latest
                 container_name: url_shortener_app
                 restart: always
                 ports:
@@ -113,9 +113,6 @@ jobs:
             volumes:
               postgres_data:
             COMPOSE_EOF
-
-            # Export ECR_REGISTRY for docker compose variable substitution
-            export ECR_REGISTRY=$ECR_REGISTRY
 
             # Pull latest image and start
             docker-compose -f docker-compose.prod.yml pull
