@@ -1,10 +1,10 @@
-# 🔗 MiniLink — URL Shortener & DevOps Project
+# MiniLink — URL Shortener & DevOps Project
 
 A production-ready URL shortening service built with FastAPI + PostgreSQL, featuring a sleek Dark Glassmorphism frontend. The infrastructure is entirely provisioned on AWS using Terraform (IaC), and continuous deployment is automated via GitHub Actions (CI/CD).
 
 Currently Live at: [http://13.212.205.51](http://13.212.205.51)
 
-## 🌟 Key Features
+## Key Features
 
 - **Blazing Fast API**: Powered by FastAPI (Python 3.12) and SQLAlchemy.
 - **Premium User Interface**: A modern, responsive Single Page Application with a "Dark Glassmorphism" aesthetic.
@@ -14,7 +14,7 @@ Currently Live at: [http://13.212.205.51](http://13.212.205.51)
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ```mermaid
 flowchart LR
@@ -33,7 +33,7 @@ flowchart LR
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 | Layer | Technology |
 |---|---|
@@ -59,7 +59,7 @@ flowchart LR
 
 ---
 
-## 🚀 Local Development
+## Local Development
 
 ```bash
 # 1. Clone the repository
@@ -78,7 +78,7 @@ docker compose up --build
 
 ---
 
-## 🧪 Running Tests Locally
+## Running Tests Locally
 
 ```bash
 # Install dependencies
@@ -90,7 +90,7 @@ pytest tests/ -v
 
 ---
 
-## ☁️ AWS Deployment Guide
+## AWS Deployment Guide
 
 ### Prerequisites
 * AWS CLI configured (`aws configure` with an IAM User that has Admin permissions)
