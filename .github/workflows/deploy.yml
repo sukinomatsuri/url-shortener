@@ -66,11 +66,45 @@ jobs:
     steps:
       - name: Deploy to EC2 via SSH
         uses: appleboy/ssh-action@v1
+        env:
+          ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
+          COMPOSE_FILE: |
+            services:
+              db:
+                image: postgres:16
+                container_name: url_shortener_db
+                restart: always
+                environment:
+                  POSTGRES_USER: postgres
+                  POSTGRES_PASSWORD: url_shortener_secret_db_password
+                  POSTGRES_DB: url_shortener
+                volumes:
+                  - postgres_data:/var/lib/postgresql/data
+                healthcheck:
+                  test: ["CMD-SHELL", "pg_isready -U postgres"]
+                  interval: 5s
+                  timeout: 5s
+                  retries: 5
+
+              app:
+                image: ${ECR_REGISTRY}/url-shortener:latest
+                container_name: url_shortener_app
+                restart: always
+                ports:
+                  - "80:8000"
+                environment:
+                  DATABASE_URL: postgresql://postgres:url_shortener_secret_db_password@db:5432/url_shortener
+                depends_on:
+                  db:
+                    condition: service_healthy
+
+            volumes:
+              postgres_data:
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ec2-user
           key: ${{ secrets.EC2_SSH_KEY }}
-          envs: ECR_REGISTRY
+          envs: ECR_REGISTRY,COMPOSE_FILE
           script: |
             # Login to ECR
             aws ecr get-login-password --region ap-southeast-1 | docker login --username AWS --password-stdin $ECR_REGISTRY
@@ -79,43 +113,9 @@ jobs:
             mkdir -p ~/url-shortener
             cd ~/url-shortener
 
-            # Write docker-compose file with ECR_REGISTRY substituted
-            cat > docker-compose.prod.yml << COMPOSE_EOF
-services:
-  db:
-    image: postgres:16
-    container_name: url_shortener_db
-    restart: always
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: url_shortener_secret_db_password
-      POSTGRES_DB: url_shortener
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
-  app:
-    image: $ECR_REGISTRY/url-shortener:latest
-    container_name: url_shortener_app
-    restart: always
-    ports:
-      - "80:8000"
-    environment:
-      DATABASE_URL: postgresql://postgres:url_shortener_secret_db_password@db:5432/url_shortener
-    depends_on:
-      db:
-        condition: service_healthy
-
-volumes:
-  postgres_data:
-COMPOSE_EOF
+            # Write docker-compose file (GitHub actions strips the relative indentation of the multi-line string)
+            echo "$COMPOSE_FILE" > docker-compose.prod.yml
 
             # Pull latest image and start
             docker-compose -f docker-compose.prod.yml pull
             docker-compose -f docker-compose.prod.yml up -d
-        env:
-          ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
