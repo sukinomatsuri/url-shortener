@@ -462,12 +462,26 @@
             }
         });
 
-        // Copy functionality
+        // Copy functionality (works on both HTTP and HTTPS)
         copyBtn.addEventListener('click', () => {
-            navigator.clipboard.writeText(shortLink.href).then(() => {
+            const textToCopy = shortLink.innerText;
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(textToCopy).then(() => {
+                    copyBtn.innerText = 'Copied!';
+                    setTimeout(() => { copyBtn.innerText = 'Copy'; }, 2000);
+                });
+            } else {
+                const textarea = document.createElement('textarea');
+                textarea.value = textToCopy;
+                textarea.style.position = 'fixed';
+                textarea.style.opacity = '0';
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
                 copyBtn.innerText = 'Copied!';
                 setTimeout(() => { copyBtn.innerText = 'Copy'; }, 2000);
-            });
+            }
         });
 
         // Enter key to submit
