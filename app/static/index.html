@@ -21,14 +21,23 @@
             background-image: 
                 radial-gradient(circle at 15% 50%, rgba(139, 92, 246, 0.2), transparent 40%),
                 radial-gradient(circle at 85% 30%, rgba(59, 130, 246, 0.2), transparent 40%);
+            background-attachment: fixed;
             color: var(--text);
             margin: 0;
             padding: 0;
             display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .hero {
+            display: flex;
             align-items: center;
             justify-content: center;
             min-height: 100vh;
-            overflow: hidden;
+            width: 100%;
+            position: relative;
         }
 
         .container {
@@ -225,31 +234,176 @@
             bottom: -150px;
             right: -100px;
         }
+
+        /* How to Use Section */
+        .how-to-use {
+            width: 100%;
+            max-width: 800px;
+            padding: 3rem 2rem 4rem;
+            text-align: center;
+        }
+
+        .section-title {
+            font-weight: 800;
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, #a78bfa 0%, #60a5fa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+        }
+
+        .section-subtitle {
+            color: #94a3b8;
+            font-weight: 300;
+            font-size: 1rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .steps {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+        }
+
+        .step-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 2rem 1.5rem;
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+        }
+
+        .step-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 12px 36px rgba(0, 0, 0, 0.35);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .step-number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            font-weight: 800;
+            font-size: 1.25rem;
+            color: white;
+            margin-bottom: 1rem;
+        }
+
+        .step-card h3 {
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin: 0 0 0.5rem 0;
+            color: #e2e8f0;
+        }
+
+        .step-card p {
+            font-size: 0.9rem;
+            color: #94a3b8;
+            margin: 0;
+            line-height: 1.5;
+            font-weight: 300;
+        }
+
+        /* Divider */
+        .divider {
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            border-radius: 2px;
+            margin: 0 auto 2rem;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 2rem;
+            color: #475569;
+            font-size: 0.85rem;
+            font-weight: 300;
+        }
+
+        .footer a {
+            color: #8b5cf6;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .footer a:hover {
+            color: #a78bfa;
+        }
+
+        /* Responsive */
+        @media (max-width: 700px) {
+            .steps {
+                grid-template-columns: 1fr;
+            }
+            .how-to-use {
+                padding: 2rem 1.5rem 3rem;
+            }
+        }
     </style>
 </head>
 <body>
 
-    <div class="blob blob-1"></div>
-    <div class="blob blob-2"></div>
+    <div class="hero">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
 
-    <div class="container">
-        <h1>MiniLink</h1>
-        <p>Shorten your long links in a split second.</p>
+        <div class="container">
+            <h1>MiniLink</h1>
+            <p>Shorten your long links in a split second.</p>
 
-        <div class="input-group">
-            <input type="url" id="urlInput" placeholder="https://very-long-url.com/something..." required autocomplete="off">
-            <button id="shortenBtn">Shorten</button>
-        </div>
-        <div class="error-msg" id="errorMsg">Please enter a valid URL.</div>
+            <div class="input-group">
+                <input type="url" id="urlInput" placeholder="https://very-long-url.com/something..." required autocomplete="off">
+                <button id="shortenBtn">Shorten</button>
+            </div>
+            <div class="error-msg" id="errorMsg">Please enter a valid URL.</div>
 
-        <div class="result-box" id="resultBox">
-            <div class="result-title">Your Shortened Link</div>
-            <div class="short-url">
-                <a href="#" id="shortLink" target="_blank">http://localhost:8000/xyz</a>
-                <button class="copy-btn" id="copyBtn">Copy</button>
+            <div class="result-box" id="resultBox">
+                <div class="result-title">Your Shortened Link</div>
+                <div class="short-url">
+                    <a href="#" id="shortLink" target="_blank">http://localhost:8000/xyz</a>
+                    <button class="copy-btn" id="copyBtn">Copy</button>
+                </div>
             </div>
         </div>
     </div>
+
+    <section class="how-to-use" id="howToUse">
+        <h2 class="section-title">How to Use</h2>
+        <p class="section-subtitle">Get a short link in 3 simple steps.</p>
+        <div class="divider"></div>
+
+        <div class="steps">
+            <div class="step-card">
+                <div class="step-number">1</div>
+                <h3>Paste Your URL</h3>
+                <p>Enter any long URL into the input field above. It must start with http:// or https://.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-number">2</div>
+                <h3>Click Shorten</h3>
+                <p>Hit the Shorten button or press Enter. Your unique short link will be generated instantly.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-number">3</div>
+                <h3>Copy & Share</h3>
+                <p>Copy the shortened link with one click and share it anywhere — social media, emails, or messages.</p>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        Built with FastAPI & PostgreSQL &mdash; <a href="https://github.com/sukinomatsuri/url-shortener" target="_blank">View on GitHub</a>
+    </footer>
 
     <script>
         const urlInput = document.getElementById('urlInput');
