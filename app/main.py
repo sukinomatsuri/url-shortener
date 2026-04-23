@@ -2,6 +2,7 @@ import string
 import random
 from fastapi import FastAPI, Depends, HTTPException, Request
 from fastapi.responses import RedirectResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, HttpUrl
 from sqlalchemy.orm import Session
 from typing import Annotated
@@ -19,6 +20,8 @@ app = FastAPI(
     description="A production-ready URL shortening service",
     version="1.0.0",
 )
+
+app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
 # ---------------------------------------------------------------------------
 # Pydantic schemas
