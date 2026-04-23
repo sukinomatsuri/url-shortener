@@ -74,14 +74,17 @@ UI.form.addEventListener('submit', async (e) => {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ url })
         });
-        if (!res.ok) throw new Error('Failed');
+        if (!res.ok) {
+            if (res.status === 429) throw new Error('Thao tác quá nhanh! Vui lòng thử lại sau.');
+            throw new Error('Server error. Could not shorten.');
+        }
         const { short_url } = await res.json();
         
         UI.link.href = UI.link.innerText = short_url;
         UI.result.classList.remove('hidden');
         saveRecent(url, short_url);
-    } catch {
-        UI.error.textContent = "Server error. Could not shorten.";
+    } catch (err) {
+        UI.error.textContent = err.message || "Server error. Could not shorten.";
         UI.error.classList.remove('hidden'); UI.result.classList.add('hidden');
     } finally {
         UI.btn.innerText = 'Shorten'; UI.btn.disabled = false;

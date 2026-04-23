@@ -96,9 +96,17 @@ jobs:
                   - "80:8000"
                 environment:
                   DATABASE_URL: postgresql://postgres:url_shortener_secret_db_password@db:5432/url_shortener
+                  REDIS_URL: redis://redis:6379/0
                 depends_on:
                   db:
                     condition: service_healthy
+                  redis:
+                    condition: service_started
+
+              redis:
+                image: redis:alpine
+                container_name: url_shortener_redis
+                restart: always
 
             volumes:
               postgres_data:

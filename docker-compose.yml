@@ -27,9 +27,19 @@ services:
       - "8000:8000"
     environment:
       DATABASE_URL: postgresql://postgres:postgres@db:5432/url_shortener
+      REDIS_URL: redis://redis:6379/0
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_started
+
+  redis:
+    image: redis:alpine
+    container_name: url_shortener_redis
+    restart: always
+    ports:
+      - "6379:6379"
 
 volumes:
   postgres_data:
