@@ -51,7 +51,9 @@ def test_health():
     """GET /health should return 200 with status ok."""
     response = client.get("/health")
     assert response.status_code == 200
-    assert response.json() == {"status": "ok"}
+    data = response.json()
+    assert data["status"] == "ok"
+    assert "redis" in data
 
 
 def test_shorten_url():
